@@ -2,176 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Turtle vs Rabbit Race</title>
-  <style>
-    body {
-      font-family: 'Comic Sans MS', cursive;
-      text-align: center;
-      background-color: #f0f8ff;
-      margin: 0;
-      padding: 0;
-    }
-    video {
-      width: 90%;
-      max-width: 600px;
-      margin-top: 10px;
-      border: 3px solid #333;
-      border-radius: 10px;
-    }
-    .track {
-      margin-top: 20px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .progress {
-      width: 90%;
-      height: 50px;
-      background-color: #eee;
-      border-radius: 25px;
-      margin: 10px;
-      position: relative;
-    }
-    .runner {
-      position: absolute;
-      top: 5px;
-      width: 40px;
-      height: 40px;
-    }
-    .winner {
-      font-size: 28px;
-      margin-top: 20px;
-      color: green;
-    }
-    .labels {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    .btn {
-      padding: 10px 20px;
-      font-size: 18px;
-      border: none;
-      background-color: #28a745;
-      color: white;
-      border-radius: 8px;
-      margin-top: 20px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background-color: #218838;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Motion Race Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>🐢 Turtle vs Rabbit 🐇</h1>
-  <video id="video" autoplay muted></video>
 
-  <div class="labels">
-    <div>🐢 You are the Turtle</div>
-    <div>🐇 You are the Rabbit</div>
+  <h1>🏁 Motion Race Game</h1>
+  <div class="input-section">
+    <label>Enter your name:</label>
+    <input type="text" id="playerName" placeholder="Type your name here">
+    <button onclick="startGame()">Start Race</button>
   </div>
 
-  <div class="track">
-    <div class="progress" id="turtleTrack">
-      <img src="turtle.png" class="runner turtle" id="turtle" />
+  <div id="game" class="hidden">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+    
+    <div id="track">
+      <img src="rabbit.png" id="player" class="character">
+      <img src="turtle.png" class="finish">
     </div>
-    <div class="progress" width="40" " id="rabbitTrack">
-      <img src="rabbit.png" width="40" " class="runner rabbit" id="rabbit" />
-    </div>
+
+    <p id="statusText"></p>
+    <button onclick="restartGame()">Restart</button>
   </div>
 
-  <div class="winner" id="winner"></div>
-  <button class="btn" onclick="resetRace()">Restart Race</button>
-
-  <audio id="bgMusic" src="https://www.fesliyanstudios.com/play-mp3/387" autoplay loop></audio>
-  <audio id="cheerSound" src="https://www.fesliyanstudios.com/play-mp3/6680"></audio>
-
-  <script>
-    const video = document.getElementById('video');
-    const turtle = document.getElementById('turtle');
-    const rabbit = document.getElementById('rabbit');
-    const winnerDisplay = document.getElementById('winner');
-    const cheerSound = document.getElementById('cheerSound');
-
-    let turtlePos = 0;
-    let rabbitPos = 0;
-    const maxDistance = 90; // %
-    let raceOver = false;
-
-    async function initCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-    }
-
-    function getMotionScore(videoEl) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoEl.videoWidth / 4;
-      canvas.height = videoEl.videoHeight / 4;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-      const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      if (!window.lastFrame) {
-        window.lastFrame = currentFrame;
-        return 0;
-      }
-
-      let diff = 0;
-      for (let i = 0; i < currentFrame.data.length; i += 4) {
-        diff += Math.abs(currentFrame.data[i] - window.lastFrame.data[i]);
-      }
-      window.lastFrame = currentFrame;
-      return diff;
-    }
-
-    function updateRace(turtleMotion, rabbitMotion) {
-      if (raceOver) return;
-
-      turtlePos += Math.min(turtleMotion / 1500, 2);
-      rabbitPos += Math.min(rabbitMotion / 1500, 2);
-
-      turtle.style.left = Math.min(turtlePos, maxDistance) + '%';
-      rabbit.style.left = Math.min(rabbitPos, maxDistance) + '%';
-
-      if (turtlePos >= maxDistance && rabbitPos >= maxDistance) {
-        winnerDisplay.textContent = "It's a tie! 🎉";
-        raceOver = true;
-        cheerSound.play();
-      } else if (turtlePos >= maxDistance) {
-        winnerDisplay.textContent = "Turtle Wins! 🐢🥇";
-        raceOver = true;
-        cheerSound.play();
-      } else if (rabbitPos >= maxDistance) {
-        winnerDisplay.textContent = "Rabbit Wins! 🐇🥇";
-        raceOver = true;
-        cheerSound.play();
-      }
-    }
-
-    function startRace() {
-      setInterval(() => {
-        const score = getMotionScore(video);
-        const turtleScore = Math.random() * score;
-        const rabbitScore = score - turtleScore;
-        updateRace(turtleScore, rabbitScore);
-      }, 1000);
-    }
-
-    function resetRace() {
-      turtlePos = 0;
-      rabbitPos = 0;
-      turtle.style.left = '0%';
-      rabbit.style.left = '0%';
-      winnerDisplay.textContent = '';
-      raceOver = false;
-    }
-
-    initCamera().then(startRace);
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
