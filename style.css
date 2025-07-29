@@ -1,0 +1,45 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #e6f7ff;
+  padding: 20px;
+}
+
+h1 {
+  color: #333;
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+#track {
+  position: relative;
+  width: 90%;
+  max-width: 640px;
+  height: 150px;
+  margin: 30px auto;
+  background-color: #f2f2f2;
+  border: 2px dashed #999;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.character {
+  position: absolute;
+  bottom: 10px;
+  height: 100px;
+  transition: left 0.1s;
+  left: 0px;
+}
+
+.finish {
+  position: absolute;
+  right: 10px;
+  height: 100px;
+  bottom: 10px;
+}
+
+.hidden {
+  display: none;
+}
