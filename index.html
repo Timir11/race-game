@@ -83,23 +83,37 @@
       let currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
       if (previousFrame) {
-        let diff = 0;
-        for (let i = 0; i < currentFrame.data.length; i += 4) {
-          diff += Math.abs(currentFrame.data[i] - previousFrame.data[i]);
+        let leftDiff = 0;
+        let rightDiff = 0;
+        let middle = canvas.width / 2;
+
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            let index = (y * canvas.width + x) * 4;
+            let diff = Math.abs(currentFrame.data[index] - previousFrame.data[index]);
+            if (x < middle) {
+              leftDiff += diff;
+            } else {
+              rightDiff += diff;
+            }
+          }
         }
 
-        if (diff > 1000000) {
+        if (leftDiff > 500000) {
           rabbitPos += 10;
-          turtlePos += 6; // turtle is slower
           rabbitChar.style.left = `${rabbitPos}px`;
-          turtleChar.style.left = `${turtlePos}px`;
+        }
 
-          if (rabbitPos >= canvas.width - 120 || turtlePos >= canvas.width - 120) {
-            raceStarted = false;
-            const winner = rabbitPos > turtlePos ? rabbitName : turtleName;
-            statusText.innerText = `${winner} wins! 🎉`;
-            return;
-          }
+        if (rightDiff > 500000) {
+          turtlePos += 6;
+          turtleChar.style.left = `${turtlePos}px`;
+        }
+
+        if (rabbitPos >= canvas.width - 120 || turtlePos >= canvas.width - 120) {
+          raceStarted = false;
+          const winner = rabbitPos > turtlePos ? rabbitName : turtleName;
+          statusText.innerText = `${winner} wins! 🎉`;
+          return;
         }
       }
 
