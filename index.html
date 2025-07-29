@@ -10,24 +10,163 @@
 
   <h1>🏁 Motion Race Game</h1>
   <div class="input-section">
-    <label>Enter your name:</label>
-    <input type="text" id="playerName" placeholder="Type your name here">
+    <label>Rabbit's Name:</label>
+    <input type="text" id="rabbitName" placeholder="Enter rabbit's name"><br><br>
+    <label>Turtle's Name:</label>
+    <input type="text" id="turtleName" placeholder="Enter turtle's name"><br><br>
     <button onclick="startGame()">Start Race</button>
   </div>
 
   <div id="game" class="hidden">
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
-    
+
     <div id="track">
-      <img src="rabbit.png" id="player" class="character">
-      <img src="turtle.png" class="finish">
+      <div id="finish-line">🏁 Finish Line</div>
+      <div class="runner" id="rabbitRunner">
+        <img src="rabbit.png" class="character" id="rabbitChar">
+        <div class="label" id="rabbitLabel"></div>
+      </div>
+      <div class="runner" id="turtleRunner">
+        <img src="turtle.png" class="character" id="turtleChar">
+        <div class="label" id="turtleLabel"></div>
+      </div>
     </div>
 
     <p id="statusText"></p>
     <button onclick="restartGame()">Restart</button>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let ctx = canvas.getContext('2d');
+
+    let rabbitChar = document.getElementById('rabbitChar');
+    let turtleChar = document.getElementById('turtleChar');
+    let rabbitLabel = document.getElementById('rabbitLabel');
+    let turtleLabel = document.getElementById('turtleLabel');
+    let statusText = document.getElementById('statusText');
+
+    let previousFrame = null;
+    let rabbitPos = 0;
+    let turtlePos = 0;
+    let raceStarted = false;
+    let rabbitName = '';
+    let turtleName = '';
+
+    function startGame() {
+      rabbitName = document.getElementById('rabbitName').value || 'Rabbit';
+      turtleName = document.getElementById('turtleName').value || 'Turtle';
+      rabbitLabel.innerText = `${rabbitName} (Rabbit)`;
+      turtleLabel.innerText = `${turtleName} (Turtle)`;
+      document.querySelector('.input-section').classList.add('hidden');
+      document.getElementById('game').classList.remove('hidden');
+      statusText.innerText = `${rabbitName} and ${turtleName} get ready! Move to win the race!`;
+      startCamera();
+      raceStarted = true;
+    }
+
+    function startCamera() {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+        setInterval(checkMotion, 200);
+      }).catch(err => {
+        alert("Camera access denied.");
+      });
+    }
+
+    function checkMotion() {
+      if (!raceStarted) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      let currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      if (previousFrame) {
+        let diff = 0;
+        for (let i = 0; i < currentFrame.data.length; i += 4) {
+          diff += Math.abs(currentFrame.data[i] - previousFrame.data[i]);
+        }
+
+        if (diff > 1000000) {
+          rabbitPos += 10;
+          turtlePos += 6; // turtle is slower
+          rabbitChar.style.left = `${rabbitPos}px`;
+          turtleChar.style.left = `${turtlePos}px`;
+
+          if (rabbitPos >= canvas.width - 120 || turtlePos >= canvas.width - 120) {
+            raceStarted = false;
+            const winner = rabbitPos > turtlePos ? rabbitName : turtleName;
+            statusText.innerText = `${winner} wins! 🎉`;
+            return;
+          }
+        }
+      }
+
+      previousFrame = currentFrame;
+    }
+
+    function restartGame() {
+      window.location.reload();
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #e6f7ff;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .input-section {
+      margin-bottom: 20px;
+    }
+    #track {
+      position: relative;
+      width: 90%;
+      max-width: 640px;
+      height: 200px;
+      margin: 30px auto;
+      background-color: #f2f2f2;
+      border: 2px dashed #999;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .runner {
+      position: absolute;
+      bottom: 10px;
+    }
+    .runner:nth-child(2) { top: 20px; }
+    .runner:nth-child(3) { top: 100px; }
+    .character {
+      height: 80px;
+      position: relative;
+      transition: left 0.1s;
+      left: 0;
+    }
+    .label {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    #finish-line {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      background: red;
+      color: white;
+      writing-mode: vertical-lr;
+      text-align: center;
+      font-weight: bold;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+
 </body>
 </html>
